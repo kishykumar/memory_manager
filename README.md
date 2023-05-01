@@ -185,7 +185,7 @@ they will interact with the manager through the interface.
 
   **Public Interfaces:**
   ```
-  1. boolean init(size_t total_memory_bytes);
+  1. bool init(size_t total_memory_bytes);
   2. void destroy();
   3. void *allocStorageMemory(size_t num_bytes);
   4. void freeStorageMemory(void *p);
@@ -233,7 +233,7 @@ they will interact with the manager through the interface.
    * If the allocation can be made, return TRUE. 
    * Otherwise, FALSE is returned.
    */
-  boolean allocRequest(poolId pool, size_t num_bytes);
+  bool allocRequest(poolId pool, size_t num_bytes);
   
   /* This routine is called by the memory allocator at memory free time 
    * to update memory statistics of the policy manager.
