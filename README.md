@@ -161,7 +161,7 @@ they will interact with the manager through the interface.
 
   **Deciding the maximum and minimum alloc size of Execution Pool:**  
   - **Max:**  
-    8MB (characteristic of the application)
+    **8MB** (characteristic of the application)
     Any request bigger than 8 MB should consider:
     - using segmented memory allocation technique where pages are
       allocated when accessed. Segmented array is one example where 
@@ -169,17 +169,19 @@ they will interact with the manager through the interface.
     - client can split the memory request into multiple requests
 
   - **Min:**  
-    The minimum amount of memory that any app can allocate is 1 byte.
-    The allocate may allocate more than 1 byte 
+    The minimum amount of memory that any app can allocate is **1 byte**.
+    The allocator may internally allocate more than 1 byte, which causes
+    internal fragmentation.
 
   **Deciding the maximum and minimum alloc size of Storage Pool:**  
   - **Max:**  
     Maximum I/O size is the characteristic of the underlying storage 
-    hardware and the app workload. This is typically in MBs. 
-    Therefore, we support the allocator's max allocatable size. 
+    hardware and the app workload. This is typically in MBs.
+    We decide **64MB** as the max storage request size.
+    But, we can support the allocator's max allocatable size as well.
 
   - **Min:**  
-    The minimum I/O size for a storage page manager would be 4KB i.e., 
+    The minimum I/O size for a storage page manager would be **4KB** i.e.,
     assuming typical hard disk/ SSD sector size of 4KB. The minimum 
     storage pool memory allocation size should hence by 4KB.
 

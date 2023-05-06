@@ -1,5 +1,5 @@
 CC      = clang
-CFLAGS  = -g
+CFLAGS  = -g -Werror=int-conversion
 RM      = rm -rf
 
 PROJECT_ROOT =
@@ -18,6 +18,7 @@ C_SRCS = $(SRC_ROOT)/mem_mgr.c \
 
 INCLUDE = -I$(INCLUDE_ROOT) -I$(SRC_ROOT)
 
+cmk: clean all
 default: all
 all: mem_mgr
 

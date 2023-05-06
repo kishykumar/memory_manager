@@ -10,9 +10,9 @@ void destroy(void);
 
 void *allocStorageMemory(size_t num_bytes);
 
-void freeStorageMemory(void *p);
+void freeStorageMemory(void *p, size_t num_bytes);
 
-void *allocExecMemory(void *p);
+void *allocExecMemory(size_t num_bytes);
 
 void freeExecMemory(void *p);
 
