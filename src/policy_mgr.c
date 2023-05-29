@@ -37,37 +37,71 @@ bool initPolicyMgr(size_t total_memory_bytes)
 
 bool policyMgrExecPoolAlloc(size_t num_bytes)
 {
+  policyMgrPoolCtx   *pool_ctx = 
+    &pm_stats.poolStats_policyMgrStats[POLICY_MGR_EXEC_POOL];
+  size_t              pool_total = pool_ctx->total_pool_mem_policyMgrPoolCtx;
+  size_t              pool_used = pool_ctx->used_memory_policyMgrPoolCtx;
+  size_t              total_system_memory = pm_stats.total_memory_policyMgrStats;
+
+  /* Sanity checks:
+   * Return can't allocate if:
+   * 1. Allocation bytes is greater than max. pool allocation size, or
+   * 2. Allocation bytes is greater than the system memory
+   */
+  if (num_bytes > pool_ctx->max_req_size_policyMgrPoolCtx || 
+      num_bytes > total_system_memory)
+  {
+    return false;
+  }
+  
+  /* Pool full: execution pool can go over pool_total, but not
+   * total_system_memory.
+   */
+  if ((total_system_memory - num_bytes) < pool_used)
+    return false;
+
+  /* Update pool used bytes */
+  pool_ctx->used_memory_policyMgrPoolCtx = pool_used + num_bytes;
   return true;
 }
 
 bool policyMgrStoragePoolAlloc(size_t num_bytes)
 {
+  policyMgrPoolCtx   *pool_ctx = 
+    &pm_stats.poolStats_policyMgrStats[POLICY_MGR_STORAGE_POOL];
+  size_t              pool_total = pool_ctx->total_pool_mem_policyMgrPoolCtx;
+  size_t              pool_used = pool_ctx->used_memory_policyMgrPoolCtx;
+
+  /* sanity checks */
+  if (num_bytes > pool_ctx->max_req_size_policyMgrPoolCtx || 
+      num_bytes > pool_total)
+  {
+    return false;
+  }
+  
+  /* Pool full */
+  if ((pool_total - num_bytes) < pool_used)
+    return false;
+  
+  /* Update pool used bytes */
+  pool_ctx->used_memory_policyMgrPoolCtx = pool_used + num_bytes;
   return true;
 }
 
-size_t policyMgrExecPoolFree(size_t num_bytes_freed)
-{
-  return 0;
-}
-
-size_t policyMgrStoragePoolFree(size_t num_bytes_freed)
-{
-  return 0;
-}
-
-bool policyMgrAllocRequest(policyMgrPool pool, size_t num_bytes)
+bool policyMgrAlloc(policyMgrPool pool, size_t num_bytes)
 {
   policyMgrPoolCtx   *pool_ctx = 
     &pm_stats.poolStats_policyMgrStats[pool];
 
-  pool_ctx->allocCbk_policyMgrPoolCtx(num_bytes);
-  return true;
+  return pool_ctx->allocCbk_policyMgrPoolCtx(num_bytes);
 }
 
-void policyMgrFreeRequest(policyMgrPool pool, size_t num_bytes_freed)
+void policyMgrAdjustAlloc(policyMgrPool pool, signed long bytes_diff)
 {
   policyMgrPoolCtx   *pool_ctx = 
     &pm_stats.poolStats_policyMgrStats[pool];
 
-  pool_ctx->freeCbk_policyMgrPoolCtx(num_bytes_freed);
+  /* Update pool used bytes */
+  pool_ctx->used_memory_policyMgrPoolCtx = (size_t)
+    ((signed long)(pool_ctx->used_memory_policyMgrPoolCtx) + bytes_diff);
 }

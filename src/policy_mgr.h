@@ -26,17 +26,17 @@ typedef enum policyMgrPool
 #define PM_STORAGE_POOL_MAX_REQ_SIZE  (64 * _1_Mi)  // 64 MB
 
 typedef bool (*pool_alloc_cbk)(size_t);
-typedef size_t (*pool_free_cbk)(size_t);
+typedef bool (*pool_adjust_alloc_cbk)(signed long);
 
 /* All the memory stats are in bytes */
 typedef struct policyMgrPoolCtx
 {
-  size_t          used_memory_policyMgrPoolCtx;
-  size_t          min_req_size_policyMgrPoolCtx;
-  size_t          max_req_size_policyMgrPoolCtx;
-  size_t          total_pool_mem_policyMgrPoolCtx;
-  pool_alloc_cbk  allocCbk_policyMgrPoolCtx;
-  pool_free_cbk   freeCbk_policyMgrPoolCtx;
+  size_t                  used_memory_policyMgrPoolCtx;
+  size_t                  min_req_size_policyMgrPoolCtx;
+  size_t                  max_req_size_policyMgrPoolCtx;
+  size_t                  total_pool_mem_policyMgrPoolCtx;
+  pool_alloc_cbk          allocCbk_policyMgrPoolCtx;
+  pool_adjust_alloc_cbk   adjustAllocCbk_policyMgrPoolCtx;
 } policyMgrPoolCtx;
 
 typedef struct policyMgrStats
@@ -49,23 +49,24 @@ policyMgrStats pm_stats;
 
 bool initPolicyMgr(size_t total_memory_bytes);
 
+/* The following functions can alternatively be placed in their respective
+ * pool source code files.
+ */
 bool policyMgrExecPoolAlloc(size_t num_bytes);
 bool policyMgrStoragePoolAlloc(size_t num_bytes);
 
-size_t policyMgrExecPoolFree(size_t num_bytes_freed);
-size_t policyMgrStoragePoolFree(size_t num_bytes_freed);
-
 /* This routine is called by the memory allocator to enforce memory 
- * policies. The policy manager checks and update its statistics to make
+ * policies. The policy manager checks its statistics to make
  * a decision.
- * If the allocation can be made, return TRUE. 
+ * If the allocation can be made, policy manager will update its 
+ * statistics and returns TRUE. 
  * Otherwise, FALSE is returned.
  */
-bool policyMgrAllocRequest(policyMgrPool pool, size_t num_bytes);
+bool policyMgrAlloc(policyMgrPool pool, size_t num_bytes);
 
-/* This routine is called by the memory allocator at memory free time 
- * to update memory statistics of the policy manager.
+/* This routine is called by the memory allocator to update memory statistics
+ * of the policy manager.
  */
-void policyMgrFreeRequest(policyMgrPool pool, size_t num_bytes_freed);
+void policyMgrAdjustAlloc(policyMgrPool pool, signed long bytes_diff);
 
 #endif /* POLICY_MGR_H_ */

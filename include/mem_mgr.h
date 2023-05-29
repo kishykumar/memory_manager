@@ -4,13 +4,13 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-bool init(size_t total_memory_bytes);
+bool initMemoryManager(size_t total_memory_bytes);
 
-void destroy(void);
+void destroyMemoryManager(void);
 
 void *allocStorageMemory(size_t num_bytes);
 
-void freeStorageMemory(void *p, size_t num_bytes);
+void freeStorageMemory(void *p);
 
 void *allocExecMemory(size_t num_bytes);
 
