@@ -46,9 +46,11 @@ bool policyMgrExecPoolAlloc(size_t num_bytes)
   /* Sanity checks:
    * Return can't allocate if:
    * 1. Allocation bytes is greater than max. pool allocation size, or
-   * 2. Allocation bytes is greater than the system memory
+   * 2. Allocation bytes is smaller than min. pool allocation size, or
+   * 3. Allocation bytes is greater than the system memory
    */
   if (num_bytes > pool_ctx->max_req_size_policyMgrPoolCtx || 
+      num_bytes < pool_ctx->min_req_size_policyMgrPoolCtx ||
       num_bytes > total_system_memory)
   {
     return false;
@@ -72,8 +74,14 @@ bool policyMgrStoragePoolAlloc(size_t num_bytes)
   size_t              pool_total = pool_ctx->total_pool_mem_policyMgrPoolCtx;
   size_t              pool_used = pool_ctx->used_memory_policyMgrPoolCtx;
 
-  /* sanity checks */
+  /* Sanity checks.
+   * Return can't allocate if:
+   * 1. Allocation bytes is greater than max. pool allocation size, or
+   * 2. Allocation bytes is smaller than min. pool allocation size, or
+   * 3. Allocation bytes is greater than pool max.
+   */
   if (num_bytes > pool_ctx->max_req_size_policyMgrPoolCtx || 
+      num_bytes < pool_ctx->min_req_size_policyMgrPoolCtx ||
       num_bytes > pool_total)
   {
     return false;

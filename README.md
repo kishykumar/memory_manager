@@ -183,7 +183,7 @@ they will interact with the manager through the interface.
   - **Min:**  
     The minimum I/O size for a storage page manager would be **4KB** i.e.,
     assuming typical hard disk/ SSD sector size of 4KB. The minimum 
-    storage pool memory allocation size should hence by 4KB.
+    storage pool memory allocation size should hence be 4KB.
 
   **Public Interfaces:**
   ```
