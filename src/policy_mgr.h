@@ -5,6 +5,7 @@
 
 #include <stdbool.h>
 #include <stdlib.h>
+#include <pthread.h>
 
 typedef enum policyMgrPool
 {
@@ -32,8 +33,14 @@ typedef bool (*pool_adjust_alloc_cbk)(signed long);
 typedef struct policyMgrPoolCtx
 {
   size_t                  used_memory_policyMgrPoolCtx;
+
+  /* minimum single allocation size for this pool */
   size_t                  min_req_size_policyMgrPoolCtx;
+
+  /* maximum single allocation size for this pool */
   size_t                  max_req_size_policyMgrPoolCtx;
+
+  /* max memory size for this pool */
   size_t                  total_pool_mem_policyMgrPoolCtx;
   pool_alloc_cbk          allocCbk_policyMgrPoolCtx;
   pool_adjust_alloc_cbk   adjustAllocCbk_policyMgrPoolCtx;
@@ -43,17 +50,13 @@ typedef struct policyMgrStats
 {
   int                 total_memory_policyMgrStats;
   policyMgrPoolCtx    poolStats_policyMgrStats[POLICY_MGR_POOL_MAX];
+  pthread_mutex_t     mutex_policyMgrStats;
 } policyMgrStats;
 
 policyMgrStats pm_stats;
 
 bool initPolicyMgr(size_t total_memory_bytes);
-
-/* The following functions can alternatively be placed in their respective
- * pool source code files.
- */
-bool policyMgrExecPoolAlloc(size_t num_bytes);
-bool policyMgrStoragePoolAlloc(size_t num_bytes);
+void destroyPolicyMgr();
 
 /* This routine is called by the memory allocator to enforce memory 
  * policies. The policy manager checks its statistics to make

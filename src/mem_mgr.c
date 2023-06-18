@@ -20,6 +20,8 @@ bool initMemoryManager(size_t total_memory_bytes)
 void destroyMemoryManager(void)
 {
   // Potentially check for leaks
+
+  destroyPolicyMgr();
 }
 
 static void *allocMem(policyMgrPool pool, size_t num_bytes)
