@@ -135,6 +135,13 @@ they will interact with the manager through the interface.
     in a single OS page.
   - For storage pool allocations, memory is (OS) page-aligned.
 
+**Multi-threading in the Policy Manager**
+  - In the current code, the policy manager state is protected by a single 
+    mutex due to simplicity and speed of implementation.
+  - If there is mutex contention, it can easily be reduced by increasing the 
+    number of mutexes and randomly (for a fair distribution) assigning threads 
+    to mutexes. The policy manager state will be per-mutex.
+
 # Modules:
 
 ## Allocator (jemalloc)
