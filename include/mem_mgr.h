@@ -4,6 +4,10 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
+/* Public routines of the Memory Manager. The routine names and arguments
+ * are self-explanatory.
+ */
+
 bool initMemoryManager(size_t total_memory_bytes);
 
 void destroyMemoryManager(void);

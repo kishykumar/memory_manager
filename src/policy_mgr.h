@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 
+/* Pool Type */
 typedef enum policyMgrPool
 {
     POLICY_MGR_EXEC_POOL = 0,
@@ -18,6 +19,7 @@ typedef enum policyMgrPool
 #define _1_Mi (1024 * _1_Ki)
 #define _1_Gi (1024 * _1_Mi)
 
+/* 50% split in execution and storage pool */
 #define POLICY_MGR_EXEC_POOL_QUOTA    50
 
 #define PM_EXEC_POOL_MIN_REQ_SIZE     1             // 1 byte
@@ -26,12 +28,12 @@ typedef enum policyMgrPool
 #define PM_STORAGE_POOL_MIN_REQ_SIZE  (4 * _1_Ki)   // 4 KB
 #define PM_STORAGE_POOL_MAX_REQ_SIZE  (64 * _1_Mi)  // 64 MB
 
-typedef bool (*pool_alloc_cbk)(size_t);
-typedef bool (*pool_adjust_alloc_cbk)(signed long);
-
-/* All the memory stats are in bytes */
+/* Per-Pool Stats
+ * All the memory stats are in bytes 
+ */
 typedef struct policyMgrPoolCtx
 {
+  /* memory used (actively allocated) in this pool */
   size_t                  used_memory_policyMgrPoolCtx;
 
   /* minimum single allocation size for this pool */
@@ -42,19 +44,26 @@ typedef struct policyMgrPoolCtx
 
   /* max memory size for this pool */
   size_t                  total_pool_mem_policyMgrPoolCtx;
-  pool_alloc_cbk          allocCbk_policyMgrPoolCtx;
-  pool_adjust_alloc_cbk   adjustAllocCbk_policyMgrPoolCtx;
 } policyMgrPoolCtx;
 
+/* Policy Manager Stats/ Context
+ * All the memory stats are in bytes 
+ */
 typedef struct policyMgrStats
 {
-  int                 total_memory_policyMgrStats;
+  /* Total size of the memory to manage */
+  size_t              total_memory_policyMgrStats;
+
+  /* Per-Pool stats */
   policyMgrPoolCtx    poolStats_policyMgrStats[POLICY_MGR_POOL_MAX];
+
+  /* Mutex that protects this shared structure */
   pthread_mutex_t     mutex_policyMgrStats;
 } policyMgrStats;
 
 policyMgrStats pm_stats;
 
+/* Initialize and destroy routines for the policy manager */
 bool initPolicyMgr(size_t total_memory_bytes);
 void destroyPolicyMgr();
 

@@ -55,13 +55,16 @@ they will interact with the manager through the interface.
 
 # Assumptions
 
-1. OS Page size = 4KB
-  Cache line size = 64 bytes
-  L1 cache size per core = 64KB (instruction cache + data cache)
+1. OS Page size = 4KB  
+   Cache line size = 64 bytes  
+   L1 cache size per core = 64KB (instruction cache + data cache)  
 
-2. Recovery of the memory manager's data structures has not been implemented
-  (in the event of process death). Can be done using latches and recovery 
-  areas if needed.
+2. Execution pool cannot borrow already allocated memory of the storage
+   pool, contrary to what has been stated in the problem statement.
+
+3. Recovery of the memory manager's data structures has not been implemented
+   (in the event of process death). Can be done using latches and recovery 
+   areas if needed.
 
 # Design
 
@@ -241,12 +244,72 @@ they will interact with the manager through the interface.
    * a decision.
    * If the allocation can be made, return TRUE. 
    * Otherwise, FALSE is returned.
+   * 
+   * Since the actual allocation size is not known to the policy manager at 
+   * allocation time (, and because I have a time constraint for a better 
+   * implementation), the actual allocation size may be larger than the 
+   * client requested size. So, policy manager adjusts its statistics with 
+   * the diff of actual allocated size and requested size post allocation 
+   * by calling je_sallocx to get the actual allocated size. See 
+   * policyMgrAdjustAlloc below.
    */
-  bool allocRequest(poolId pool, size_t num_bytes);
+  bool policyMgrAlloc(poolId pool, size_t num_bytes);
   
-  /* This routine is called by the memory allocator at memory free time 
-   * to update memory statistics of the policy manager.
+  /* This routine is called by the memory allocator at memory allocation
+   * and free time to update memory statistics of the policy manager.
    */
-  void freeRequest(poolId pool, size_t num_bytes);
+  void policyMgrAdjustAlloc(poolId pool, size_t num_bytes);
 
   ```
+## Limitations
+
+  - In the current implementation, a single mutex (mutex_policyMgrStats) 
+    protects the policy manager state. If there is mutex contention,
+    we can try to reduce the code in the critical section first, or
+    use atomic counters, or reducing read-write contention with a 
+    reader-writer lock.
+
+## Building + Running the Tests (with Unity Framework)
+
+  After git clone of the repository, a simple *make* will build the code
+  and generate the memory manager binary. Executing the binary currently
+  runs the tests.
+
+  ```
+  ➜  memory_manager git:(main) ✗ make; ./mem_mgr          
+  rm -rf mem_mgr mem_mgr.dSYM
+  clang -g -Werror=int-conversion -Werror=uninitialized -Ljemalloc/obj/lib -Ijemalloc/obj/include -Iunity/src \
+          -Wl,-rpath,jemalloc/obj/lib -lstdc++ -lpthread jemalloc/obj/lib/libjemalloc.dylib -Iinclude -Isrc -o mem_mgr src/mem_mgr.c src/policy_mgr.c src/tests.c unity/src/unity.c
+  src/tests.c:313:testExec1ByteAlloc:PASS
+  src/tests.c:314:testExec4BytesAlloc:PASS
+  src/tests.c:315:testExec8BytesAlloc:PASS
+  src/tests.c:316:testExecMaxSizeAlloc:PASS
+  src/tests.c:318:testStorage4KBAlloc:PASS
+  src/tests.c:319:testStorageMaxSizeAlloc:PASS
+  src/tests.c:322:testStorage1ByteAlloc:PASS
+  src/tests.c:323:testStorage4BytesAlloc:PASS
+  src/tests.c:324:testStorage8BytesAlloc:PASS
+  src/tests.c:325:testNegativeCases:PASS
+
+  -----------------------
+  10 Tests 0 Failures 0 Ignored 
+  OK
+  src/tests.c:303:testMultipleSerialAllocs:PASS
+  src/tests.c:304:testExecPoolQuota:PASS
+  src/tests.c:305:testStoragePoolQuota:PASS
+  src/tests.c:306:testMixedWorkload:PASS
+  src/tests.c:307:testFree:PASS
+
+  -----------------------
+  5 Tests 0 Failures 0 Ignored 
+  OK
+  src/tests.c:440:testMultiThreadAccess:PASS
+
+  -----------------------
+  1 Tests 0 Failures 0 Ignored 
+  OK
+  ```
+
+  Libraries (shared .so library or static .a library) may be generated to
+  use the mem_mgr routines statically or at runtime. Due to time constraint,
+  this is future work.
